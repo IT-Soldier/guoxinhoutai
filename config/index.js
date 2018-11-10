@@ -10,7 +10,13 @@ module.exports = {
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {},
+    // 开发环境地址: (订单管理) http://60.205.223.142/carscraporder-manager/order?page=1&rows=10
+    proxyTable: {
+      '/carscraporder-manager': {
+        target: 'http://60.205.223.142/',
+        changeOrigin: true
+      }
+    },
 
     // Various Dev Server settings
     host: 'localhost', // can be overwritten by process.env.HOST
