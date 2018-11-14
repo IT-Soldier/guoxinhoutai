@@ -1,10 +1,11 @@
 <template>
   <div>
     <el-dialog
+      title="旧件订单信息：No.000237"
       fullscreen
+      center
       @close="closePartEditDialog"
       :visible="partEditvisible">
-      <h1 style="text-align:center; font-size:30px">旧件订单信息：No.000237</h1>
       <el-form
       label-position="right"
       label-width="130px"
@@ -14,77 +15,100 @@
         <el-row>
           <el-col :span='12'>
             <h2 class="carMessage"><i class="el-icon-tickets"></i><span>车辆信息</span></h2>
-            <el-form-item label="车牌号" prop="username">
+            <el-form-item label="车牌号:" prop="username">
               <el-input class="input" type="text" v-model="formData.username"></el-input>
             </el-form-item>
-            <el-form-item class="input" label="车架号" prop="username">
+            <el-form-item class="input" label="车架号:" prop="username">
               <el-input type="text" v-model="formData.username"></el-input>
             </el-form-item>
-            <el-form-item class="input" label="车辆型号" prop="username">
+            <el-form-item class="input" label="车辆型号:" prop="username">
               <el-input type="text" v-model="formData.username"></el-input>
             </el-form-item>
-            <el-form-item label="能否行驶" prop="username">
-              <el-radio v-model="radioRun" label="1">可以行驶</el-radio>
-              <el-radio v-model="radioRun" label="2">不可以行驶</el-radio>
-              <el-radio v-model="radioRun" label="3">严重事故</el-radio>
-            </el-form-item>
-            <el-form-item label="车辆归属" prop="username">
-              <el-radio v-model="radioAttr" label="1">个人</el-radio>
-              <el-radio v-model="radioAttr" label="2">公户</el-radio>
-            </el-form-item>
-            <el-form-item class="input" label="车辆与手续照片">
-              <el-input type="text" v-model="formData.mobile"></el-input>
+            <el-form-item class="input" label="报案号:" prop="username">
+              <el-input type="text" v-model="formData.username"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span='12'>
             <h2 class="carMessage"><i class="el-icon-tickets"></i><span>取车信息</span></h2>
-            <el-form-item class="input" label="取车联系人" prop="username">
-              <el-input type="text" v-model="formData.username"></el-input>
+            <el-form-item class="input" label="取车联系人:" prop="username">
+              <el-input type="text" v-model="formData.username">
+                <!-- 少了slot属性,无法向组件内插入东西的 -->
+                <el-button slot="append" type="info" plain @click="handelQuery">常用联系人</el-button>
+              </el-input>
             </el-form-item>
-            <el-form-item class="input" label="联系人电话">
+            <el-form-item class="input" label="联系人电话:">
               <el-input type="text" v-model="formData.mobile"></el-input>
             </el-form-item>
-            <el-form-item class="input" label="取车时间">
+            <el-form-item class="input" label="取车时间:">
               <el-date-picker type="date" placeholder="选择日期" style="width: 100%;"></el-date-picker>
             </el-form-item>
-            <el-form-item class="input" label="取车地址" prop="username">
+            <el-form-item class="input" label="取车地址:" prop="username">
               <el-input type="text" v-model="formData.username"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
-          <el-col :span='12'>
-            <h2 class="carMessage"><i class="el-icon-tickets"></i><span>残值发放信息</span></h2>
-            <el-form-item class="input" label="收款人姓名" prop="username">
-              <el-input type="text" v-model="formData.username"></el-input>
-            </el-form-item>
-            <el-form-item class="input" label="银行账户" prop="username">
-              <el-input type="text" v-model="formData.username"></el-input>
-            </el-form-item>
-            <el-form-item class="input" label="开户行" prop="username">
-              <el-input type="text" v-model="formData.username"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span='12'>
-            <h2 class="carMessage"><i class="el-icon-tickets"></i><span>手续邮寄信息</span></h2>
-            <el-form-item class="input" label="收件人姓名" prop="username">
-              <el-input type="text" v-model="formData.username"></el-input>
-            </el-form-item>
-            <el-form-item class="input" label="收件人电话">
-              <el-input type="text" v-model="formData.mobile"></el-input>
-            </el-form-item>
-            <el-form-item class="input" label="邮寄地址">
-              <el-input type="text" v-model="formData.mobile"></el-input>
-            </el-form-item>
+          <h2 class="carMessage"><i class="el-icon-tickets"></i><span>配件信息</span></h2>
+          <el-col :span='22'>
+            <el-table
+              :style="{marginLeft: '50px',marginBottom: '50px'}"
+              :stripe="true"
+              :data="tableReplacementData"
+            >
+              <el-table-column
+                label="配件分类">
+                <!-- 通过 Scoped slot 可以获取到 row, column, $index 和 store（table 内部的状态管理）的数据 -->
+                <template slot-scope="scope">
+                  <span>{{ scope.row.orderNo }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                label="配件名称">
+                <!-- 通过 Scoped slot 可以获取到 row, column, $index 和 store（table 内部的状态管理）的数据 -->
+                <template slot-scope="scope">
+                  <span>{{ scope.row.orderNo }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                label="零件编号">
+                <!-- 通过 Scoped slot 可以获取到 row, column, $index 和 store（table 内部的状态管理）的数据 -->
+                <template slot-scope="scope">
+                  <span>{{ scope.row.orderNo }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                label="备注">
+                <!-- 通过 Scoped slot 可以获取到 row, column, $index 和 store（table 内部的状态管理）的数据 -->
+                <template slot-scope="scope">
+                  <span>{{ scope.row.orderNo }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                label="配件照片">
+                <!-- 通过 Scoped slot 可以获取到 row, column, $index 和 store（table 内部的状态管理）的数据 -->
+                <template slot-scope="scope">
+                  <span>{{ scope.row.orderNo }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                label="编辑">
+                <!-- 通过 Scoped slot 可以获取到 row, column, $index 和 store（table 内部的状态管理）的数据 -->
+                <template slot-scope="scope">
+                  <el-button
+                  size="mini"
+                  type="primary"
+                  icon="el-icon-edit"
+                  plain
+                  @click="openEditDialogForm(scope.row)"></el-button>
+                </template>
+              </el-table-column>
+            </el-table>
           </el-col>
         </el-row>
         <el-row>
           <el-col :span='12'>
             <h2 class="carMessage"><i class="el-icon-tickets"></i><span>派单信息</span></h2>
-            <el-form-item class="input" label="业务员" prop="username">
-              <el-input type="text" v-model="formData.username"></el-input>
-            </el-form-item>
-            <el-form-item class="input" label="邮箱">
+            <el-form-item class="input" label="业务员">
               <el-select v-model="formData.username" placeholder="请选择业务员">
                 <el-option label="区域一" value="shanghai"></el-option>
                 <el-option label="区域二" value="beijing"></el-option>
@@ -97,8 +121,9 @@
         </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="partQuitDialog">取 消</el-button>
-        <el-button type="primary" @click="partHandelEdit">确 定</el-button>
+        <el-button type="primary" @click="partQuitDialog">异常订单</el-button>
+        <el-button type="primary" @click="partHandelEdit">暂存</el-button>
+        <el-button type="primary" @click="partHandelEdit">派单</el-button>
       </div>
     </el-dialog>
   </div>
@@ -120,6 +145,8 @@ export default {
   },
   data () {
     return {
+      // 配件信息表格数据
+      tableReplacementData: [],
       // 车辆归属单选按钮
       radioAttr: 1,
       // 能否行驶单选按钮
@@ -157,7 +184,7 @@ export default {
         this.formData[key] = ''
       }
       this.$emit('closePartEditDialog')
-    },
+    }
   }
 }
 </script>

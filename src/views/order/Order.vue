@@ -7,6 +7,7 @@
     <div style="margin-top: 15px;">
       <!-- clearable使得输入框可以被清除 -->
       <el-input
+      @change="searchChange(query)"
       class="search"
         clearable
         placeholder="订单编号/车牌号/车架号/描述/联系人/联系电话"
@@ -18,6 +19,11 @@
           @click="handelQuery"></el-button>
       </el-input>
     </div>
+    <el-row :style="{marginBottom: '10px' }">
+      <el-button type="primary" plain @click="unprocessed">未处理</el-button>
+      <el-button :style="{marginLeft: '-5px'}" type="primary" plain @click="processed">已处理</el-button>
+      <el-button :style="{marginLeft: '-5px' }" type="primary" plain @click="allOrderList">全部</el-button>
+    </el-row>
     <!-- 表格主体 -->
     <!-- 当el-table元素中注入data对象数组后，
     在el-table-column中用prop属性来对应对象中的键名即可填入数据，
@@ -150,7 +156,7 @@
 import MyBreadcrumb from '@/components/MyBreadcrumb'
 import AllEditOrder from '@/views/order/components/AllEditOrder'
 import PartEditOrder from '@/views/order/components/PartEditOrder'
-import { getOrderList } from '@/api/order'
+import { getOrderList, getHistoryOrderList, getAllOrderList } from '@/api/order'
 export default {
   components: {
     MyBreadcrumb,
@@ -159,6 +165,8 @@ export default {
   },
   data () {
     return {
+      // 判定当前所要查询的订单状态,默认1为未处理,2为已处理,3为全部
+      orderState: 1,
       // 要传递给旧件编辑页面的表单数据
       partFormData: {},
       // 要传递给整车编辑页面的表单数据
@@ -201,10 +209,64 @@ export default {
     allHandelEdit () {
       this.allEditvisible = false
     },
+    // 全部订单
+    async allOrderList () {
+      this.orderState = 3
+      let data = {
+        page: 1,
+        rows: 10
+      }
+      const response = await getAllOrderList(data)
+      if (response.data.code === 200) {
+        console.log(response.data.data.rows)
+        this.tableData = response.data.data.rows
+        this.total = response.data.total
+      } else {
+        console.log('全部订单列表获取失败')
+      }
+    },
+    // 已处理订单
+    async processed () {
+      this.orderState = 2
+      let data = {
+        page: 1,
+        rows: 10
+      }
+      const response = await getHistoryOrderList(data)
+      if (response.data.code === 200) {
+        console.log(response.data.data.rows)
+        this.tableData = response.data.data.rows
+        this.total = response.data.total
+      } else {
+        console.log('已处理订单列表获取失败')
+      }
+    },
+    // 未处理订单
+    async unprocessed () {
+      this.orderState = 1
+      let data = {
+        page: 1,
+        rows: 10,
+        orderStatus: 1
+      }
+      const response = await getOrderList(data)
+      if (response.data.code === 200) {
+        console.log(response.data.data.rows)
+        this.tableData = response.data.data.rows
+        this.total = response.data.total
+      } else {
+        console.log('未处理订单列表获取失败')
+      }
+    },
     // 加载订单列表信息
     async loadData () {
+      let data = {
+        page: 1,
+        rows: 10,
+        orderStatus: 1
+      }
       // 获取表格数据并填充
-      const response = await getOrderList({})
+      const response = await getOrderList(data)
       if (response.data.code === 200) {
         console.log(response.data.data.rows)
         this.tableData = response.data.data.rows
@@ -213,28 +275,85 @@ export default {
         console.log('列表获取失败')
       }
     },
-    // 查询功能,查询的是username
-    handelQuery () {
-      this.$http
-        .get(`users?pagenum=${this.pagenum}&pagesize=${this.pagesize}&query=${this.query}`)
-        .then(response => {
-          const {msg, status} = response.data.meta
-          if (status === 200) {
-            console.log(response.data)
-            this.total = response.data.data.total
-            this.pagenum = response.data.data.pagenum
-            this.tableData = response.data.data.users
-          } else {
-            this.$message.error(msg)
-          }
-        })
-        .catch(error => {
-          console.log(error)
-        })
+    // 查询功能,查询的是框内的东西
+    async handelQuery () {
+      let data = {
+        page: 1,
+        rows: 10,
+        keyWord: this.query
+      }
+      if (this.orderState === 1) {
+        data.orderStatus = 1
+        const response = await getOrderList(data)
+        if (response.data.code === 200) {
+          console.log(response.data.data.rows)
+          this.tableData = response.data.data.rows
+          this.total = response.data.total
+        } else {
+          console.log('未处理订单列表搜索失败')
+        }
+      } else if (this.orderState === 2) {
+        const response = await getHistoryOrderList(data)
+        if (response.data.code === 200) {
+          console.log(response.data.data.rows)
+          this.tableData = response.data.data.rows
+          this.total = response.data.total
+        } else {
+          console.log('已处理订单列表搜索失败')
+        }
+      } else if (this.orderState === 3) {
+        const response = await getAllOrderList(data)
+        if (response.data.code === 200) {
+          console.log(response.data.data.rows)
+          this.tableData = response.data.data.rows
+          this.total = response.data.total
+        } else {
+          console.log('全部订单列表搜索失败')
+        }
+      }
+    },
+    // 当搜索内容发生变化的时候触发事件
+    // 输入框失去焦点,点击清空x号都会触发,输入内容后,回车触发
+    async searchChange (value) {
+      let data = {
+        page: 1,
+        rows: 10,
+        keyWord: value
+      }
+      if (this.orderState === 1) {
+        data.orderStatus = 1
+        const response = await getOrderList(data)
+        if (response.data.code === 200) {
+          console.log(response.data.data.rows)
+          this.tableData = response.data.data.rows
+          this.total = response.data.total
+        } else {
+          console.log('未处理订单列表搜索失败')
+        }
+      } else if (this.orderState === 2) {
+        const response = await getHistoryOrderList(data)
+        if (response.data.code === 200) {
+          console.log(response.data.data.rows)
+          this.tableData = response.data.data.rows
+          this.total = response.data.total
+        } else {
+          console.log('已处理订单列表搜索失败')
+        }
+      } else if (this.orderState === 3) {
+        const response = await getAllOrderList(data)
+        if (response.data.code === 200) {
+          console.log(response.data.data.rows)
+          this.tableData = response.data.data.rows
+          this.total = response.data.total
+        } else {
+          console.log('全部订单列表搜索失败')
+        }
+      }
     },
     // 打开编辑弹出框,并将数据渲染到页面上去
     openEditDialogForm (row) {
       // row中已经有了表单所需的信息,不需要再次发请求拿数据
+      console.log('要弹开哪个界面')
       console.log(Number(row.orderType))
       console.log(row)
       if (Number(row.orderType) === 1) {

@@ -31,6 +31,9 @@
         <el-col :span="2" class="menuButton">
           <el-button type="primary" plain>系统设置</el-button>
         </el-col>
+        <el-col :span="2" class="menuButton">
+          <el-button type="primary" plain @click="getLogin">点击登录</el-button>
+        </el-col>
       </el-row>
     </div>
     <el-container>
@@ -43,6 +46,9 @@
 </template>
 
 <script>
+import { login, getTest } from '@/api/order'
+import Cookies from 'js-cookie'
+
 export default {
   data () {
     return {
@@ -50,7 +56,14 @@ export default {
     }
   },
   methods: {
-
+    async getLogin () {
+      const response = await login({})
+      if (response.data.code === 200) {
+        Cookies.set('v_v-s-ticket', response.data.data.sessionId)
+        console.log('登录信息')
+        console.log(response)
+      }
+    }
   },
   mounted () {
   }
