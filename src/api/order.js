@@ -27,6 +27,7 @@ export const getHistoryOrderList = (getData) => {
     method: 'get'
   })
 }
+// 获取所有订单列表
 export const getAllOrderList = (getData) => {
   const data = {
     page: getData.page,
@@ -39,7 +40,7 @@ export const getAllOrderList = (getData) => {
     method: 'get'
   })
 }
-// 调用登陆之后,后台在浏览器种了cookie,有名也有值
+// 调用登陆之后,后台返回了cookie值
 export const login = ({name = 'admin', password = 'admin1', rememberMe = true}) => {
   const data = {
     name: name,
@@ -50,5 +51,67 @@ export const login = ({name = 'admin', password = 'admin1', rememberMe = true}) 
     url: '/carscraporder-manager/account/login',
     data,
     method: 'post'
+  })
+}
+// 获取订单详情
+export const getOrderDetail = (id) => {
+  return axios.request({
+    url: `/carscraporder-manager/order/${id}`,
+    method: 'get'
+  })
+}
+// 派单信息,业务员的选择
+export const selectSalesman = (data) => {
+  return axios.request({
+    url: `/carscraporder-manager/user/queryReceiveUser`,
+    data: data,
+    method: 'get'
+  })
+}
+// 获取常用联系人信息
+export const selectConnectionPerson = (data) => {
+  return axios.request({
+    url: `/carscraporder-manager/commonContacts`,
+    data,
+    method: 'get'
+  })
+}
+// 配件编辑页面-配件大类下拉框
+export const selectReplacementClass = () => {
+  return axios.request({
+    url: `/carscraporder-manager/carPartsCategory`,
+    method: 'get'
+  })
+}
+// 配件编辑页面-配件名称下拉框
+export const selectReplacementName = (data) => {
+  return axios.request({
+    url: `/carscraporder-manager/carPartsCategory`,
+    data,
+    method: 'get'
+  })
+}
+// 旧件订单暂存功能
+export const partOrdertemporaryStorage = (id, data) => {
+  return axios.request({
+    url: `/carscraporder-manager/order/${id}`,
+    data,
+    method: 'put'
+  })
+}
+// 旧件订单派单功能
+export const normalPartOrder = (id, data) => {
+  return axios.request({
+    url: `/carscraporder-manager/order/audit/${id}`,
+    data,
+    method: 'put'
+  })
+}
+// 旧件订单派单异常
+export const abnormalPartOrder = (id, data) => {
+  return axios.request({
+    url: `/carscraporder-manager/order/audit/${id}`,
+    data,
+    method: 'put'
   })
 }

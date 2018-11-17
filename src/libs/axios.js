@@ -1,6 +1,6 @@
 import axios from 'axios'
 import {baseURL} from '@/config/url'
-import qs from 'qs'
+// import qs from 'qs'
 
 class HttpRequest {
   constructor (baseUrl = baseURL) {
@@ -32,17 +32,9 @@ class HttpRequest {
 
   create (options) {
     if (options.method === 'post' || options.method === 'put') {
-      console.log(options)
-      console.log(options.headers)
       options.headers['Content-Type'] = 'application/x-www-form-urlencoded'
-      // options.params = options.data
-      // options.data = options.data
-      options.data = qs.stringify(options.data)
-    } else if (options.method) {
-      options.params = options.data
     }
-    console.log('请求参数')
-    console.log(options)
+    options.params = options.data
     return axios.create(options)
   }
 

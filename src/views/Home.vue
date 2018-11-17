@@ -14,22 +14,22 @@
       <!-- 目前只有订单管理,是可以跳转的 -->
       <el-row class="rowMenuButton">
         <el-col :span="2" :offset="1" :style="{paddingLeft: '28px', marginLeft: '15px'}" class="menuButton">
-          <el-button type="primary" plain>首页</el-button>
+          <el-button :style="{color: buttonState == 'home' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'home' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushHome">首页</el-button>
         </el-col>
         <el-col :span="2" class="menuButton">
-          <el-button type="primary" plain @click="$router.push('/order')">订单管理</el-button>
+          <el-button :style="{color: buttonState == 'order' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'order' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushOrder">订单管理</el-button>
         </el-col>
         <el-col :span="2" class="menuButton">
-          <el-button type="primary" plain>报废汽车</el-button>
+          <el-button :style="{color: buttonState == 'car' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'car' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushCar">报废汽车</el-button>
         </el-col>
         <el-col :span="2" class="menuButton">
-          <el-button type="primary" plain>旧件回收</el-button>
+          <el-button :style="{color: buttonState == 'old' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'old' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushOld">旧件回收</el-button>
         </el-col>
         <el-col :span="2" class="menuButton">
-          <el-button type="primary" plain>财务管理</el-button>
+          <el-button :style="{color: buttonState == 'money' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'money' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushMoney">财务管理</el-button>
         </el-col>
         <el-col :span="2" class="menuButton">
-          <el-button type="primary" plain>系统设置</el-button>
+          <el-button :style="{color: buttonState == 'system' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'system' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushSystem">系统设置</el-button>
         </el-col>
         <el-col :span="2" class="menuButton">
           <el-button type="primary" plain @click="getLogin">点击登录</el-button>
@@ -46,19 +46,42 @@
 </template>
 
 <script>
-import { login, getTest } from '@/api/order'
+import { login } from '@/api/order'
 import Cookies from 'js-cookie'
 
 export default {
   data () {
     return {
-
+      // 菜单导航按钮的状态,用于高亮显示
+      buttonState: ''
     }
   },
   methods: {
+    // 菜单导航,对应项应当高亮,且完成跳转
+    pushHome () {
+      this.buttonState = 'home'
+      this.$router.push('/home')
+    },
+    pushOrder () {
+      this.buttonState = 'order'
+      this.$router.push('/order')
+    },
+    pushCar () {
+      this.buttonState = 'car'
+    },
+    pushOld () {
+      this.buttonState = 'old'
+    },
+    pushMoney () {
+      this.buttonState = 'money'
+    },
+    pushSystem () {
+      this.buttonState = 'system'
+    },
     async getLogin () {
       const response = await login({})
       if (response.data.code === 200) {
+        // 设置cookie
         Cookies.set('v_v-s-ticket', response.data.data.sessionId)
         console.log('登录信息')
         console.log(response)

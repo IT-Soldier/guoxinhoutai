@@ -20,23 +20,27 @@
       </el-input>
     </div>
     <el-row :style="{marginBottom: '10px' }">
-      <el-button type="primary" plain @click="unprocessed">未处理</el-button>
-      <el-button :style="{marginLeft: '-5px'}" type="primary" plain @click="processed">已处理</el-button>
-      <el-button :style="{marginLeft: '-5px' }" type="primary" plain @click="allOrderList">全部</el-button>
+      <el-button
+        type="primary"
+        plain
+        :style="{color: orderState == 1 ? '#FFF' : '#409EFF', backgroundColor: orderState == 1 ? '#409EFF' : '#ecf5ff'}"
+        @click="unprocessed">未处理</el-button>
+      <el-button
+        :style="{marginLeft: '-5px',color: orderState == 2 ? '#FFF' : '#409EFF', backgroundColor: orderState == 2 ? '#409EFF' : '#ecf5ff'}"
+        type="primary"
+        plain
+        @click="processed">已处理</el-button>
+      <el-button
+        :style="{marginLeft: '-5px',color: orderState == 3 ? '#FFF' : '#409EFF', backgroundColor: orderState == 3 ? '#409EFF' : '#ecf5ff'}"
+        type="primary"
+        plain
+        @click="allOrderList">全部</el-button>
     </el-row>
     <!-- 表格主体 -->
-    <!-- 当el-table元素中注入data对象数组后，
-    在el-table-column中用prop属性来对应对象中的键名即可填入数据，
-    用label属性来定义表格的列名。
-    可以使用width属性来定义列宽。 -->
-    <!-- :data="tableData"绑定data中的数据 -->
-    <!-- border加边框 -->
-    <!-- lebal-width设置所有列的宽度 -->
     <el-table
       border
       :stripe="true"
       :data="tableData"
-      lebal-width="50px"
       style="width: 100%;">
       <el-table-column
         label="订单编号">
@@ -121,8 +125,7 @@
       </el-table-column>
     </el-table>
     <!-- 编辑用户弹出框 -->
-    <!-- close是Dialog 关闭的回调函数 -->
-      <!-- 整车的编辑页面 -->
+    <!-- 整车的编辑页面 -->
     <all-edit-order
     @allQuitDialog="allQuitDialog"
     @allHandelEdit="allHandelEdit"
@@ -131,8 +134,11 @@
     </all-edit-order>
     <!-- 旧件的编辑页面 -->
     <part-edit-order
-    @partQuitDialog="partQuitDialog"
-    @partHandelEdit="partHandelEdit"
+    v-if="partEditvisible"
+    :partOrderDetail="partOrderDetail"
+    @abnormal="abnormal"
+    @orderNormal="orderNormal"
+    @temporaryStorage="temporaryStorage"
     @closePartEditDialog="closePartEditDialog"
     :partEditvisible="partEditvisible">
     </part-edit-order>
@@ -141,12 +147,10 @@
     <!-- 其余的功能就是英语字面的翻译 -->
     <el-pagination
       class="fenye"
-      @size-change="handleSizeChange"
+      background
       @current-change="handleCurrentChange"
       :current-page="pagenum"
-      :page-sizes="[2, 3, 4, 5]"
-      :page-size="pagesize"
-      layout="total, sizes, prev, pager, next, jumper"
+      layout="total, prev, pager, next"
       :total="total">
     </el-pagination>
   </el-card>
@@ -156,7 +160,7 @@
 import MyBreadcrumb from '@/components/MyBreadcrumb'
 import AllEditOrder from '@/views/order/components/AllEditOrder'
 import PartEditOrder from '@/views/order/components/PartEditOrder'
-import { getOrderList, getHistoryOrderList, getAllOrderList } from '@/api/order'
+import { getOrderList, getHistoryOrderList, getAllOrderList, getOrderDetail } from '@/api/order'
 export default {
   components: {
     MyBreadcrumb,
@@ -168,13 +172,12 @@ export default {
       // 判定当前所要查询的订单状态,默认1为未处理,2为已处理,3为全部
       orderState: 1,
       // 要传递给旧件编辑页面的表单数据
-      partFormData: {},
+      partOrderDetail: {},
       // 要传递给整车编辑页面的表单数据
-      allFormData: {},
+      newOrderdetail: {},
       tableData: [],
       query: '',
       pagenum: 1,
-      pagesize: 4,
       total: 0,
       // 旧件编辑页面开关变量
       partEditvisible: false,
@@ -185,17 +188,43 @@ export default {
     }
   },
   methods: {
+    // 从订单编辑页面出来,需要重新发请求刷新数据,
+    // 编辑的按钮较多,封装一个发请求的函数
+    async getDataAgain () {
+      let data = {
+        page: this.pagenum,
+        rows: 10
+      }
+      let response = {}
+      if (this.orderState === 1) {
+        data.orderStatus = 1
+        response = await getOrderList(data)
+      } else if (this.orderState === 2) {
+        response = await getHistoryOrderList(data)
+      } else if (this.orderState === 3) {
+        response = await getAllOrderList(data)
+      }
+      this.tableData = response.data.data.rows
+      this.total = response.data.data.total
+    },
     // 编辑旧件界面点击X号
     closePartEditDialog () {
       this.partEditvisible = false
     },
-    // 编辑旧件界面点击取消
-    partQuitDialog () {
+    // 编辑旧件界面点击派单
+    orderNormal () {
       this.partEditvisible = false
+      this.getDataAgain()
     },
-    // 编辑旧件界面点击确定
-    partHandelEdit () {
+    // 编辑旧件界面点击异常订单
+    abnormal () {
       this.partEditvisible = false
+      this.getDataAgain()
+    },
+    // 编辑旧件界面点击暂存按钮
+    temporaryStorage () {
+      this.partEditvisible = false
+      this.getDataAgain()
     },
     // 编辑整车界面点击X号
     closeAllEditDialog () {
@@ -211,6 +240,8 @@ export default {
     },
     // 全部订单
     async allOrderList () {
+      // 解决问题:未处理页码为4,跳到全部还为4
+      this.pagenum = 1
       this.orderState = 3
       let data = {
         page: 1,
@@ -218,15 +249,15 @@ export default {
       }
       const response = await getAllOrderList(data)
       if (response.data.code === 200) {
-        console.log(response.data.data.rows)
         this.tableData = response.data.data.rows
-        this.total = response.data.total
+        this.total = response.data.data.total
       } else {
-        console.log('全部订单列表获取失败')
+        this.$message.error('全部订单列表获取失败')
       }
     },
     // 已处理订单
     async processed () {
+      this.pagenum = 1
       this.orderState = 2
       let data = {
         page: 1,
@@ -234,15 +265,15 @@ export default {
       }
       const response = await getHistoryOrderList(data)
       if (response.data.code === 200) {
-        console.log(response.data.data.rows)
         this.tableData = response.data.data.rows
-        this.total = response.data.total
+        this.total = response.data.data.total
       } else {
-        console.log('已处理订单列表获取失败')
+        this.$message.error('已处理订单列表获取失败')
       }
     },
     // 未处理订单
     async unprocessed () {
+      this.pagenum = 1
       this.orderState = 1
       let data = {
         page: 1,
@@ -251,11 +282,10 @@ export default {
       }
       const response = await getOrderList(data)
       if (response.data.code === 200) {
-        console.log(response.data.data.rows)
         this.tableData = response.data.data.rows
-        this.total = response.data.total
+        this.total = response.data.data.total
       } else {
-        console.log('未处理订单列表获取失败')
+        this.$message.error('未处理订单列表获取失败')
       }
     },
     // 加载订单列表信息
@@ -268,55 +298,17 @@ export default {
       // 获取表格数据并填充
       const response = await getOrderList(data)
       if (response.data.code === 200) {
-        console.log(response.data.data.rows)
         this.tableData = response.data.data.rows
-        this.total = response.data.total
+        this.total = response.data.data.total
       } else {
-        console.log('列表获取失败')
+        this.$message.error('未处理订单列表获取失败')
       }
     },
     // 查询功能,查询的是框内的东西
     async handelQuery () {
+      this.pagenum = 1
       let data = {
-        page: 1,
-        rows: 10,
-        keyWord: this.query
-      }
-      if (this.orderState === 1) {
-        data.orderStatus = 1
-        const response = await getOrderList(data)
-        if (response.data.code === 200) {
-          console.log(response.data.data.rows)
-          this.tableData = response.data.data.rows
-          this.total = response.data.total
-        } else {
-          console.log('未处理订单列表搜索失败')
-        }
-      } else if (this.orderState === 2) {
-        const response = await getHistoryOrderList(data)
-        if (response.data.code === 200) {
-          console.log(response.data.data.rows)
-          this.tableData = response.data.data.rows
-          this.total = response.data.total
-        } else {
-          console.log('已处理订单列表搜索失败')
-        }
-      } else if (this.orderState === 3) {
-        const response = await getAllOrderList(data)
-        if (response.data.code === 200) {
-          console.log(response.data.data.rows)
-          this.tableData = response.data.data.rows
-          this.total = response.data.total
-        } else {
-          console.log('全部订单列表搜索失败')
-        }
-      }
-    },
-    // 当搜索内容发生变化的时候触发事件
-    // 输入框失去焦点,点击清空x号都会触发,输入内容后,回车触发
-    async searchChange (value) {
-      let data = {
-        page: 1,
+        page: this.pagenum,
         rows: 10,
         keyWord: value
       }
@@ -326,7 +318,7 @@ export default {
         if (response.data.code === 200) {
           console.log(response.data.data.rows)
           this.tableData = response.data.data.rows
-          this.total = response.data.total
+          this.total = response.data.data.total
         } else {
           console.log('未处理订单列表搜索失败')
         }
@@ -335,7 +327,7 @@ export default {
         if (response.data.code === 200) {
           console.log(response.data.data.rows)
           this.tableData = response.data.data.rows
-          this.total = response.data.total
+          this.total = response.data.data.total
         } else {
           console.log('已处理订单列表搜索失败')
         }
@@ -344,52 +336,79 @@ export default {
         if (response.data.code === 200) {
           console.log(response.data.data.rows)
           this.tableData = response.data.data.rows
-          this.total = response.data.total
+          this.total = response.data.data.total
+        } else {
+          console.log('全部订单列表搜索失败')
+        }
+      }
+    },
+    // 当搜索内容发生变化的时候触发事件
+    // 输入框失去焦点,点击清空x号都会触发,输入内容后,回车触发
+    async searchChange (value) {
+      // 搜索时,页码也要归1,万一我不是在页码1的情况下搜索的呢
+      this.pagenum = 1
+      let data = {
+        page: this.pagenum,
+        rows: 10,
+        keyWord: value
+      }
+      if (this.orderState === 1) {
+        data.orderStatus = 1
+        const response = await getOrderList(data)
+        if (response.data.code === 200) {
+          console.log(response.data.data.rows)
+          this.tableData = response.data.data.rows
+          this.total = response.data.data.total
+        } else {
+          console.log('未处理订单列表搜索失败')
+        }
+      } else if (this.orderState === 2) {
+        const response = await getHistoryOrderList(data)
+        if (response.data.code === 200) {
+          console.log(response.data.data.rows)
+          this.tableData = response.data.data.rows
+          this.total = response.data.data.total
+        } else {
+          console.log('已处理订单列表搜索失败')
+        }
+      } else if (this.orderState === 3) {
+        const response = await getAllOrderList(data)
+        if (response.data.code === 200) {
+          console.log(response.data.data.rows)
+          this.tableData = response.data.data.rows
+          this.total = response.data.data.total
         } else {
           console.log('全部订单列表搜索失败')
         }
       }
     },
     // 打开编辑弹出框,并将数据渲染到页面上去
-    openEditDialogForm (row) {
+    async openEditDialogForm (row) {
       // row中已经有了表单所需的信息,不需要再次发请求拿数据
       console.log('要弹开哪个界面')
-      console.log(Number(row.orderType))
-      console.log(row)
+      // 需要先拿数据,再打开编辑页面传值
+      const response = await getOrderDetail(row.id)
+      this.partOrderDetail = response.data.data
+      console.log(this.partOrderDetail)
       if (Number(row.orderType) === 1) {
         this.allEditvisible = true
       } else if (Number(row.orderType) === 2) {
         this.partEditvisible = true
+      } else {
+
       }
     },
-    // pagesize变化时触发事件
-    handleSizeChange (val) {
-      // 当不在第一页时,点击当前显示页数,回车时,应跳转到第一页
-      if (this.pagenum !== 1) {
-        this.pagenum = 1
-      }
-      // 此处的val对应的是page-sizes中的值
-      // console.log(`每页 ${val} 条`);
-      this.pagesize = val - 0
-      this.loadData()
-    },
-    // pagenum变化时触发的事件
+    // pagenum变化时触发的事件(包括点击页码,上翻,下翻)
     handleCurrentChange (val) {
       // 此处的val对应的是current-page的值
       // console.log(`当前页: ${val}`);
       // val是字符串,pagenum需要的是数字
+      console.log('观察哪个事件被触发')
+      console.log(val)
       this.pagenum = val - 0
-      this.loadData()
-    },
-    // 修改用户状态功能
-    async stateChange (row) {
-      const response = await this.$http.put(`users/${row.id}/state/${row.mg_state}`)
-      this.$message.success('用户状态修改成功!')
+      this.getDataAgain()
     }
   },
-  // beforeCreate() {
-  //   // 此处最愚蠢的是最早可以使用数据和方法的时候是created的时候
-  // }
   mounted () {
     this.loadData()
   }
