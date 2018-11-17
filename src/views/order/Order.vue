@@ -310,7 +310,7 @@ export default {
       let data = {
         page: this.pagenum,
         rows: 10,
-        keyWord: value
+        keyWord: this.query
       }
       if (this.orderState === 1) {
         data.orderStatus = 1

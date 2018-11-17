@@ -86,7 +86,7 @@ export const selectReplacementClass = () => {
 // 配件编辑页面-配件名称下拉框
 export const selectReplacementName = (data) => {
   return axios.request({
-    url: `/carscraporder-manager/carPartsCategory`,
+    url: `/carscraporder-manager/carParts`,
     data,
     method: 'get'
   })
@@ -111,6 +111,14 @@ export const normalPartOrder = (id, data) => {
 export const abnormalPartOrder = (id, data) => {
   return axios.request({
     url: `/carscraporder-manager/order/audit/${id}`,
+    data,
+    method: 'put'
+  })
+}
+// 配件编辑更新
+export const getNewReplacement = (id, data) => {
+  return axios.request({
+    url: `/carscraporder-manager/autoparts/${id}`,
     data,
     method: 'put'
   })

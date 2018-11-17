@@ -120,11 +120,11 @@
             <!-- 选中的业务员应保存在一个单独的字段里,是要写的一个字段 -->
             <el-form-item class="input" label="业务员:">
               <el-select
-                v-for="item in SalesmanData"
-                :key="item.id"
                 v-model="partOrderDetail.agentUserid"
                 placeholder="请选择业务员:">
                 <el-option
+                  v-for="item in SalesmanData"
+                  :key="item.id"
                   :label="item.realName"
                   :value="item.id"></el-option>
               </el-select>
@@ -174,9 +174,8 @@
         <el-button type="primary" @click="confirmConnectPerson">确 定</el-button>
       </span>
     </el-dialog>
-    <!-- 方案一:级联选择器,使用一个接口
-    方案二:放开限制,使用两个接口 -->
     <el-dialog
+      v-if="replacementEditvisible"
       :style="{width: '70%'}"
       title="配件信息编辑"
       center
@@ -185,37 +184,41 @@
       <el-form :model="replacementEditData">
         <el-form-item class="input" label="配件大类:">
           <el-select
+            @change="selectReplacementClassData"
             :style="{width: '300px'}"
-            v-for="item in bigReplacementClassData"
-            :key="item.id"
             v-model="replacementEditData.partsCaregoryName"
             placeholder="请选择配件大类">
             <el-option
+              v-for="item in bigReplacementClassData"
+              :key="item.id"
               :label="item.partsCategoryName"
-              :value="item.id"></el-option>
+              :value="item.partsCategoryName"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item class="input" label="配件名称:">
           <el-select
+           @change="selectReplacementNameData"
             :style="{width: '300px'}"
-            v-for="item in bigReplacementNameData"
-            :key="item.id"
             v-model="replacementEditData.partsTypeName"
             placeholder="请选择配件名称">
             <el-option
-              :label="item.partsCategoryName"
-              :value="item.id"></el-option>
+              v-for="item in bigReplacementNameData"
+              :key="item.id"
+              :label="item.partsName"
+              :value="item.partsName"></el-option>
           </el-select>
         </el-form-item>
+        <el-form-item class="input" label="零件编号:" prop="partsNum">
+          <el-input :style="{width: '300px'}" type="text" v-model="replacementEditData.partsNum"></el-input>
+        </el-form-item>
+        <el-form-item class="input" label="派单备注">
+            <el-input :style="{width: '300px'}" type="textarea" v-model="replacementEditData.remark"></el-input>
+        </el-form-item>
       </el-form>
-      <div class="block">
-        <span class="demonstration">默认 click 触发子菜单</span>
-        <el-cascader
-          :options="options"
-          v-model="selectedOptions"
-          @change="handleChange">
-        </el-cascader>
-      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="cancelReplacementChange">取 消</el-button>
+        <el-button type="primary" @click="confirmReplacementChange">确 定</el-button>
+      </span>
     </el-dialog>
   </div>
 </template>
@@ -223,7 +226,7 @@
 <script>
 // 处理时间格式
 import moment from 'moment'
-import { selectSalesman, selectConnectionPerson, selectReplacementClass, selectReplacementName, partOrdertemporaryStorage, normalPartOrder, abnormalPartOrder } from '@/api/order'
+import { selectSalesman, selectConnectionPerson, selectReplacementClass, selectReplacementName, partOrdertemporaryStorage, normalPartOrder, abnormalPartOrder, getNewReplacement } from '@/api/order'
 export default {
   props: {
     partEditvisible: {
@@ -242,209 +245,22 @@ export default {
   },
   data () {
     return {
-options: [{
-          value: 'zhinan',
-          label: '指南',
-          children: [{
-            value: 'shejiyuanze',
-            label: '设计原则',
-            children: [{
-              value: 'yizhi',
-              label: '一致'
-            }, {
-              value: 'fankui',
-              label: '反馈'
-            }, {
-              value: 'xiaolv',
-              label: '效率'
-            }, {
-              value: 'kekong',
-              label: '可控'
-            }]
-          }, {
-            value: 'daohang',
-            label: '导航',
-            children: [{
-              value: 'cexiangdaohang',
-              label: '侧向导航'
-            }, {
-              value: 'dingbudaohang',
-              label: '顶部导航'
-            }]
-          }]
-        }, {
-          value: 'zujian',
-          label: '组件',
-          children: [{
-            value: 'basic',
-            label: 'Basic',
-            children: [{
-              value: 'layout',
-              label: 'Layout 布局'
-            }, {
-              value: 'color',
-              label: 'Color 色彩'
-            }, {
-              value: 'typography',
-              label: 'Typography 字体'
-            }, {
-              value: 'icon',
-              label: 'Icon 图标'
-            }, {
-              value: 'button',
-              label: 'Button 按钮'
-            }]
-          }, {
-            value: 'form',
-            label: 'Form',
-            children: [{
-              value: 'radio',
-              label: 'Radio 单选框'
-            }, {
-              value: 'checkbox',
-              label: 'Checkbox 多选框'
-            }, {
-              value: 'input',
-              label: 'Input 输入框'
-            }, {
-              value: 'input-number',
-              label: 'InputNumber 计数器'
-            }, {
-              value: 'select',
-              label: 'Select 选择器'
-            }, {
-              value: 'cascader',
-              label: 'Cascader 级联选择器'
-            }, {
-              value: 'switch',
-              label: 'Switch 开关'
-            }, {
-              value: 'slider',
-              label: 'Slider 滑块'
-            }, {
-              value: 'time-picker',
-              label: 'TimePicker 时间选择器'
-            }, {
-              value: 'date-picker',
-              label: 'DatePicker 日期选择器'
-            }, {
-              value: 'datetime-picker',
-              label: 'DateTimePicker 日期时间选择器'
-            }, {
-              value: 'upload',
-              label: 'Upload 上传'
-            }, {
-              value: 'rate',
-              label: 'Rate 评分'
-            }, {
-              value: 'form',
-              label: 'Form 表单'
-            }]
-          }, {
-            value: 'data',
-            label: 'Data',
-            children: [{
-              value: 'table',
-              label: 'Table 表格'
-            }, {
-              value: 'tag',
-              label: 'Tag 标签'
-            }, {
-              value: 'progress',
-              label: 'Progress 进度条'
-            }, {
-              value: 'tree',
-              label: 'Tree 树形控件'
-            }, {
-              value: 'pagination',
-              label: 'Pagination 分页'
-            }, {
-              value: 'badge',
-              label: 'Badge 标记'
-            }]
-          }, {
-            value: 'notice',
-            label: 'Notice',
-            children: [{
-              value: 'alert',
-              label: 'Alert 警告'
-            }, {
-              value: 'loading',
-              label: 'Loading 加载'
-            }, {
-              value: 'message',
-              label: 'Message 消息提示'
-            }, {
-              value: 'message-box',
-              label: 'MessageBox 弹框'
-            }, {
-              value: 'notification',
-              label: 'Notification 通知'
-            }]
-          }, {
-            value: 'navigation',
-            label: 'Navigation',
-            children: [{
-              value: 'menu',
-              label: 'NavMenu 导航菜单'
-            }, {
-              value: 'tabs',
-              label: 'Tabs 标签页'
-            }, {
-              value: 'breadcrumb',
-              label: 'Breadcrumb 面包屑'
-            }, {
-              value: 'dropdown',
-              label: 'Dropdown 下拉菜单'
-            }, {
-              value: 'steps',
-              label: 'Steps 步骤条'
-            }]
-          }, {
-            value: 'others',
-            label: 'Others',
-            children: [{
-              value: 'dialog',
-              label: 'Dialog 对话框'
-            }, {
-              value: 'tooltip',
-              label: 'Tooltip 文字提示'
-            }, {
-              value: 'popover',
-              label: 'Popover 弹出框'
-            }, {
-              value: 'card',
-              label: 'Card 卡片'
-            }, {
-              value: 'carousel',
-              label: 'Carousel 走马灯'
-            }, {
-              value: 'collapse',
-              label: 'Collapse 折叠面板'
-            }]
-          }]
-        }, {
-          value: 'ziyuan',
-          label: '资源',
-          children: [{
-            value: 'axure',
-            label: 'Axure Components'
-          }, {
-            value: 'sketch',
-            label: 'Sketch Templates'
-          }, {
-            value: 'jiaohu',
-            label: '组件交互文档'
-          }]
-        }],
-        selectedOptions: [],
-        selectedOptions2: [],
+      // 配件大类专用id
+      replacementClassId : 0,
       // 数据加载呈现遮罩层
       loading: false,
-      // 配件名称信息
-      bigReplacementNameData: [],
+      // 配件名称信息(无初始化数据就没有框出现,因为v-for)
+      bigReplacementNameData: [
+        {
+          id: 1,
+          partsTypeName: ''
+        }
+      ],
       // 配件大类信息
-      bigReplacementClassData: [],
+      bigReplacementClassData: [{
+          id: 1,
+          partsCaregoryName: ''
+      }],
       // 配件信息详情
       replacementEditData: [],
       // 配件编辑页面开关
@@ -461,9 +277,55 @@ options: [{
     }
   },
   methods: {
-      handleChange(value) {
-        console.log(value);
-      },
+    // 当选择了配件名称触发事件
+    selectReplacementNameData () {
+      // 因为无法直接获取到id,只能拿着大类名称去筛一遍数据
+      this.bigReplacementNameData.forEach(item => {
+        if(item.partsName === this.replacementEditData.partsTypeName) {
+          this.replacementEditData.partsType = item.id
+        }
+      })
+    },
+    // 点击配件大类下拉框发请求
+    async selectReplacementClassData () {
+      const response = await selectReplacementClass()
+      let data = response.data.data
+      console.log(data)
+      // 因为无法直接获取到id,只能拿着大类名称去筛一遍数据
+      data.forEach(item => {
+        if(item.partsCategoryName === this.replacementEditData.partsCaregoryName) {
+          this.replacementClassId = item.id
+        }
+      })
+      let getdata = {
+        categoryId: this.replacementClassId
+      }
+      const response2 = await selectReplacementName(getdata)
+      this.bigReplacementNameData = response2.data.data
+      console.log('选择配件名称下拉框')
+      console.log(this.bigReplacementNameData)
+    },
+    // 点击配件编辑确认按钮
+    async confirmReplacementChange() {
+      this.replacementEditvisible = false
+      let data = {
+        orderId: this.replacementEditData.orderId,
+        partsType: this.replacementEditData.partsType,
+        partsNum: this.replacementEditData.partsNum,
+        remark: this.replacementEditData.remark
+      }
+      let id = this.replacementEditData.id
+      const response = await getNewReplacement(id,data)
+      if(response.data.code === 200) {
+        this.$message.success('配件信息修改成功')
+      } else {
+        this.$message.error('配件信息修改失败')
+      }
+    },
+    // 点击配件编辑取消按钮
+    cancelReplacementChange() {
+      this.replacementEditvisible = false
+    },
     // 点击x号关闭配件编辑页面
     closeReplacementEditDialog () {
       this.replacementEditvisible = false
@@ -477,14 +339,17 @@ options: [{
       console.log(data)
       const response1 = await selectReplacementClass()
       this.bigReplacementClassData = response1.data.data
-      // 暂且使用第二种方案,因为方案简单,categoryId暂定为1
+      this.bigReplacementClassData.forEach(item => {
+        if(item.partsCategoryName === this.replacementEditData.partsCaregoryName) {
+          this.replacementClassId = item.id
+        }
+      })
+      console.log(this.replacementClassId)
       let getdata = {
-        categoryId: 1
+        categoryId: this.replacementClassId
       }
       const response2 = await selectReplacementName(getdata)
       this.bigReplacementNameData = response2.data.data
-      console.log('选择配件名称下拉框')
-      console.log(this.bigReplacementNameData)
     },
     // 获取常用联系人信息(当页面被创建时,业务员的信息就应该被拿到)
     getConnectionPersonInfo () {
