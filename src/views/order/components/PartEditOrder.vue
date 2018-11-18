@@ -246,7 +246,7 @@ export default {
   data () {
     return {
       // 配件大类专用id
-      replacementClassId : 0,
+      replacementClassId: 0,
       // 数据加载呈现遮罩层
       loading: false,
       // 配件名称信息(无初始化数据就没有框出现,因为v-for)
@@ -258,8 +258,8 @@ export default {
       ],
       // 配件大类信息
       bigReplacementClassData: [{
-          id: 1,
-          partsCaregoryName: ''
+        id: 1,
+        partsCaregoryName: ''
       }],
       // 配件信息详情
       replacementEditData: [],
@@ -281,7 +281,7 @@ export default {
     selectReplacementNameData () {
       // 因为无法直接获取到id,只能拿着大类名称去筛一遍数据
       this.bigReplacementNameData.forEach(item => {
-        if(item.partsName === this.replacementEditData.partsTypeName) {
+        if (item.partsName === this.replacementEditData.partsTypeName) {
           this.replacementEditData.partsType = item.id
         }
       })
@@ -293,7 +293,7 @@ export default {
       console.log(data)
       // 因为无法直接获取到id,只能拿着大类名称去筛一遍数据
       data.forEach(item => {
-        if(item.partsCategoryName === this.replacementEditData.partsCaregoryName) {
+        if (item.partsCategoryName === this.replacementEditData.partsCaregoryName) {
           this.replacementClassId = item.id
         }
       })
@@ -306,7 +306,7 @@ export default {
       console.log(this.bigReplacementNameData)
     },
     // 点击配件编辑确认按钮
-    async confirmReplacementChange() {
+    async confirmReplacementChange () {
       this.replacementEditvisible = false
       let data = {
         orderId: this.replacementEditData.orderId,
@@ -315,15 +315,15 @@ export default {
         remark: this.replacementEditData.remark
       }
       let id = this.replacementEditData.id
-      const response = await getNewReplacement(id,data)
-      if(response.data.code === 200) {
+      const response = await getNewReplacement(id, data)
+      if (response.data.code === 200) {
         this.$message.success('配件信息修改成功')
       } else {
         this.$message.error('配件信息修改失败')
       }
     },
     // 点击配件编辑取消按钮
-    cancelReplacementChange() {
+    cancelReplacementChange () {
       this.replacementEditvisible = false
     },
     // 点击x号关闭配件编辑页面
@@ -340,7 +340,7 @@ export default {
       const response1 = await selectReplacementClass()
       this.bigReplacementClassData = response1.data.data
       this.bigReplacementClassData.forEach(item => {
-        if(item.partsCategoryName === this.replacementEditData.partsCaregoryName) {
+        if (item.partsCategoryName === this.replacementEditData.partsCaregoryName) {
           this.replacementClassId = item.id
         }
       })

@@ -6,36 +6,28 @@
       <el-row>
         <el-col :span="4"><img src="@/assets/logo.png" :style="{marginTop: '20px'}"></el-col>
         <el-col :span="18" class="title" :style="{ textAlign: 'left', fontSize: '36px'}">国信管理后台</el-col>
-        <el-col :span="2"><a class="logout" href="javascript:;">退出</a></el-col>
+        <el-col :span="2"><a class="logout" href="javascript:;" @click.prevent="logout">退出</a></el-col>
       </el-row>
     </el-header>
     <!-- 菜单栏导航 -->
-    <div>
-      <!-- 目前只有订单管理,是可以跳转的 -->
-      <el-row class="rowMenuButton">
-        <el-col :span="2" :offset="1" :style="{paddingLeft: '28px', marginLeft: '15px'}" class="menuButton">
-          <el-button :style="{color: buttonState == 'home' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'home' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushHome">首页</el-button>
-        </el-col>
-        <el-col :span="2" class="menuButton">
-          <el-button :style="{color: buttonState == 'order' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'order' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushOrder">订单管理</el-button>
-        </el-col>
-        <el-col :span="2" class="menuButton">
-          <el-button :style="{color: buttonState == 'car' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'car' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushCar">报废汽车</el-button>
-        </el-col>
-        <el-col :span="2" class="menuButton">
-          <el-button :style="{color: buttonState == 'old' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'old' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushOld">旧件回收</el-button>
-        </el-col>
-        <el-col :span="2" class="menuButton">
-          <el-button :style="{color: buttonState == 'money' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'money' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushMoney">财务管理</el-button>
-        </el-col>
-        <el-col :span="2" class="menuButton">
-          <el-button :style="{color: buttonState == 'system' ? '#FFF' : '#409EFF', backgroundColor: buttonState == 'system' ? '#409EFF' : '#ecf5ff'}" type="primary" plain @click="pushSystem">系统设置</el-button>
-        </el-col>
-        <el-col :span="2" class="menuButton">
-          <el-button type="primary" plain @click="getLogin">点击登录</el-button>
-        </el-col>
-      </el-row>
-    </div>
+    <el-row :style="{backgroundColor: '#ecf5ff', height: '60px'}">
+      <el-col :offset=1>
+        <el-menu
+          :default-active="activeIndex"
+          active-text-color="#409eff"
+          text-color="#888"
+          background-color="#ecf5ff"
+          router
+          mode="horizontal">
+          <el-menu-item :index="path.home">首页</el-menu-item>
+          <el-menu-item :index="path.order">订单管理</el-menu-item>
+          <el-menu-item :index="path.car">报废汽车</el-menu-item>
+          <el-menu-item :index="path.old">旧件回收</el-menu-item>
+          <el-menu-item :index="path.money">财务管理</el-menu-item>
+          <el-menu-item :index="path.system">系统设置</el-menu-item>
+        </el-menu>
+      </el-col>
+    </el-row>
     <el-container>
       <!-- 主内容区 -->
       <el-main>
@@ -46,49 +38,57 @@
 </template>
 
 <script>
-import { login } from '@/api/order'
 import Cookies from 'js-cookie'
-
 export default {
   data () {
     return {
-      // 菜单导航按钮的状态,用于高亮显示
-      buttonState: ''
+      // 菜单导航所需路径
+      path: {
+        home: '/home',
+        order: '/order',
+        car: '/car',
+        old: '/old',
+        money: '/money',
+        system: '/system'
+      },
+      activeIndex: '/home'
     }
   },
   methods: {
-    // 菜单导航,对应项应当高亮,且完成跳转
-    pushHome () {
-      this.buttonState = 'home'
-      this.$router.push('/home')
+    // 退出登录事件
+    logout () {
+      // 提示用户确认其已经触发的动作，并询问是否进行此操作时会用到此对话框。
+      this.$confirm('是否确认退出登录?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 需要清空cookie
+        Cookies.remove('v_v-s-ticket')
+        // 跳转到登录页,并提醒登录
+        this.$router.push('/login')
+        this.dialogVisible = false
+        this.$message.success('您已经成功退出!')
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消退出登录'
+        })
+      })
     },
-    pushOrder () {
-      this.buttonState = 'order'
-      this.$router.push('/order')
-    },
-    pushCar () {
-      this.buttonState = 'car'
-    },
-    pushOld () {
-      this.buttonState = 'old'
-    },
-    pushMoney () {
-      this.buttonState = 'money'
-    },
-    pushSystem () {
-      this.buttonState = 'system'
-    },
-    async getLogin () {
-      const response = await login({})
-      if (response.data.code === 200) {
-        // 设置cookie
-        Cookies.set('v_v-s-ticket', response.data.data.sessionId)
-        console.log('登录信息')
-        console.log(response)
+    heightLight () {
+      // 每次f5刷新都会触发,为了菜单栏高亮,截取字符串
+      let hash = window.location.hash
+      console.log(hash)
+      hash = hash.slice(hash.indexOf('/') + 1)
+      if (hash.indexOf('/') != -1) {
+        hash = hash.substr(0, hash.indexOf('/'))
       }
+      this.activeIndex = '/' + hash
     }
   },
-  mounted () {
+  created () {
+    this.heightLight()
   }
 }
 </script>
@@ -126,8 +126,5 @@ export default {
   .logout {
     text-decoration: none;
     color: orange;
-  }
-  .el-row,.el-col {
-    height: 100%;
   }
 </style>

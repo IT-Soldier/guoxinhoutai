@@ -59,7 +59,7 @@
       <el-table-column
         label="订单类型">
         <template slot-scope="scope">
-          <span>{{ scope.row.orderType === 1 ? '整车' : '旧件' }}</span>
+          <span>{{ scope.row.orderType == 1 ? '整车' : '旧件' }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -415,7 +415,7 @@ export default {
 }
 </script>
 
-<style>
+<style scope>
 .box-card {
   height: 100%;
   /* card高度不够,默认是hidden */

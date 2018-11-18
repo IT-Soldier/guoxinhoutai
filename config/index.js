@@ -56,7 +56,9 @@ module.exports = {
     // Paths
     assetsRoot: path.resolve(__dirname, '../dist'),
     assetsSubDirectory: 'static',
-    assetsPublicPath: '/',
+    // 生产环境的一个根目录,在index.html中显示为/carscraporder-manager/html/static/js/app.44ea8fc99942f60f4064.js
+    // 后端会需要的一个地址
+    assetsPublicPath: '/carscraporder-manager/html/',
 
     /**
      * Source Maps
